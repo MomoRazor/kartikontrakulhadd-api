@@ -1,10 +1,18 @@
 import express from 'express';
+import { json } from 'body-parser';
 import { bouncer } from './middleware';
 import cors from 'cors';
 import helmet from 'helmet';
 import axios from 'axios';
-import { MAILGUN_DOMAIN, MAILGUN_ID, MAILGUN_SERVICE_URL } from './enviornment';
-import { deliveryPrice, emailList, fromEmail, pricePerBox } from './config';
+import {
+    MAILGUN_DOMAIN,
+    MAILGUN_ID,
+    MAILGUN_SERVICE_URL,
+    PAYPAL_CLIENT_ID,
+    PAYPAL_CLIENT_SECRET,
+    PAYPAL_SERVICE_URL
+} from './enviornment';
+import { deliveryPrice, emailList, fromEmail, generatePurchaseUnits, pricePerBox } from './config';
 import moment from 'moment';
 
 const app = express();
@@ -13,7 +21,28 @@ app.use(cors());
 app.use(helmet());
 app.use(bouncer);
 
-app.post('/orderEmail', async (req, res) => {
+app.post('/createPaypalOrder', json(), async (req, res) => {
+    if (req.body.amount) {
+        let purchaseUnits: any[] = generatePurchaseUnits(req.body.amount, req.body.delivery);
+
+        try {
+            const result = await axios.post<any>(PAYPAL_SERVICE_URL + 'createOrder', {
+                paypalId: PAYPAL_CLIENT_ID,
+                paypalSecret: PAYPAL_CLIENT_SECRET,
+                purchaseUnits: purchaseUnits
+            });
+            res.json({
+                order: result.data.order
+            });
+        } catch (e) {
+            res.status(500).send(e);
+        }
+    } else {
+        res.status(400).send('Amount Missing');
+    }
+});
+
+app.post('/orderEmail', json(), async (req, res) => {
     if (req.body.orderData) {
         try {
             await axios.post(MAILGUN_SERVICE_URL + 'send', {
@@ -53,7 +82,7 @@ app.post('/orderEmail', async (req, res) => {
     }
 });
 
-app.post('/clientEmail', async (req, res) => {
+app.post('/clientEmail', json(), async (req, res) => {
     if (req.body.orderData) {
         try {
             await axios.post(MAILGUN_SERVICE_URL + 'send', {
@@ -95,31 +124,9 @@ app.post('/clientEmail', async (req, res) => {
     }
 });
 
-app.post('/generatePurchaseUnits', async (req, res) => {
+app.post('/generatePurchaseUnits', json(), async (req, res) => {
     if (req.body.amount) {
-        let purchaseUnits: any[] = [];
-
-        for (let i = 0; i < req.body.amount; i++) {
-            purchaseUnits.push({
-                reference_id: 'KKKBOX-' + i,
-                description: 'A Box of Karti Kontra Kulħadd',
-                amount: {
-                    currency_code: 'EUR',
-                    value: pricePerBox.toFixed(2)
-                }
-            });
-        }
-
-        if (req.body.delivery) {
-            purchaseUnits.push({
-                reference_id: 'delivery',
-                description: 'Delivery Service',
-                amount: {
-                    currency_code: 'EUR',
-                    value: deliveryPrice.toFixed(2)
-                }
-            });
-        }
+        let purchaseUnits: any[] = generatePurchaseUnits(req.body.amount, req.body.delivery);
 
         res.json({
             purchaseUnits: purchaseUnits
