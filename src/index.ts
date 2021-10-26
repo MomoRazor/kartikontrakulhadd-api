@@ -7,10 +7,10 @@ import axios from 'axios';
 import {
     MAILGUN_DOMAIN,
     MAILGUN_ID,
-    MAILGUN_SERVICE_URL,
-    PAYPAL_CLIENT_ID,
-    PAYPAL_CLIENT_SECRET,
-    PAYPAL_SERVICE_URL
+    MAILGUN_SERVICE_URL
+    // PAYPAL_CLIENT_ID,
+    // PAYPAL_CLIENT_SECRET,
+    // PAYPAL_SERVICE_URL
 } from './enviornment';
 import { deliveryPrice, emailList, fromEmail, generatePurchaseUnits, pricePerBox } from './config';
 import moment from 'moment';
@@ -21,26 +21,26 @@ app.use(cors());
 app.use(helmet());
 app.use(bouncer);
 
-app.post('/createPaypalOrder', json(), async (req, res) => {
-    if (req.body.amount) {
-        let purchaseUnits: any[] = generatePurchaseUnits(req.body.amount, req.body.delivery);
+// app.post('/createPaypalOrder', json(), async (req, res) => {
+//     if (req.body.amount) {
+//         let purchaseUnits: any[] = generatePurchaseUnits(req.body.amount, req.body.delivery);
 
-        try {
-            const result = await axios.post<any>(PAYPAL_SERVICE_URL + 'createOrder', {
-                paypalId: PAYPAL_CLIENT_ID,
-                paypalSecret: PAYPAL_CLIENT_SECRET,
-                purchaseUnits: purchaseUnits
-            });
-            res.json({
-                order: result.data.order
-            });
-        } catch (e) {
-            res.status(500).send(e);
-        }
-    } else {
-        res.status(400).send('Amount Missing');
-    }
-});
+//         try {
+//             const result = await axios.post<any>(PAYPAL_SERVICE_URL + 'createOrder', {
+//                 paypalId: PAYPAL_CLIENT_ID,
+//                 paypalSecret: PAYPAL_CLIENT_SECRET,
+//                 purchaseUnits: purchaseUnits
+//             });
+//             res.json({
+//                 order: result.data.order
+//             });
+//         } catch (e) {
+//             res.status(500).send(e);
+//         }
+//     } else {
+//         res.status(400).send('Amount Missing');
+//     }
+// });
 
 app.post('/orderEmail', json(), async (req, res) => {
     if (req.body.orderData) {
@@ -58,6 +58,7 @@ app.post('/orderEmail', json(), async (req, res) => {
                         <li>Name: ${req.body.orderData.name}</li>
                         <li>Surname: ${req.body.orderData.surname}</li>
                         <li>Email: ${req.body.orderData.email}</li>
+                        <li>Mobile Number: ${req.body.orderData.mobileNumber}</li>
                         <li>Amount: ${req.body.orderData.amount}</li>
                         <li>${req.body.orderData.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
                         ${
@@ -68,6 +69,9 @@ app.post('/orderEmail', json(), async (req, res) => {
                                   req.body.orderData.addressLine2 +
                                   ' ' +
                                   req.body.orderData.localityCode +
+                                  '</li>' +
+                                  '<li>Special Request: ' +
+                                  req.body.orderData.deliveryNote +
                                   '</li>'
                                 : ''
                         }
@@ -100,6 +104,7 @@ app.post('/clientEmail', json(), async (req, res) => {
                     <li>Name: ${req.body.orderData.name}</li>
                     <li>Surname: ${req.body.orderData.surname}</li>
                     <li>Email: ${req.body.orderData.email}</li>
+                    <li>Mobile Number: ${req.body.orderData.mobileNumber}</li>
                     <li>Amount: ${req.body.orderData.amount}</li>
                     <li>${req.body.orderData.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
                     ${
@@ -110,14 +115,14 @@ app.post('/clientEmail', json(), async (req, res) => {
                               req.body.orderData.addressLine2 +
                               ' ' +
                               req.body.orderData.localityCode +
+                              '</li>' +
+                              '<li>Special Request: ' +
+                              req.body.orderData.deliveryNote +
                               '</li>'
                             : ''
                     }
                     <li>Price: €${price.toFixed(2)}</li>
-                </ul>
-                <p>We will be in touch with you soon to coordinate your ${
-                    req.body.orderData.delivery ? 'delivery' : 'pickup'
-                }!</p>`
+                </ul>`
             });
         } catch (e) {
             res.status(500).send(e);
