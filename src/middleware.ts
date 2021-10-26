@@ -4,6 +4,8 @@ import { SERVICE_PROVIDER_DOMAINS } from './enviornment';
 export const bouncer = (req: Request, res: Response, next: NextFunction) => {
     if (SERVICE_PROVIDER_DOMAINS) {
         const verifiedDomains = SERVICE_PROVIDER_DOMAINS.split(',');
+        console.log(verifiedDomains);
+        console.log(req.hostname);
         if (verifiedDomains.includes(req.hostname)) {
             next();
         } else {
