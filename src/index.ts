@@ -44,6 +44,7 @@ app.post('/createPaypalOrder', json(), async (req, res) => {
 
 app.post('/orderEmail', json(), async (req, res) => {
     if (req.body.orderData) {
+        const price = pricePerBox * req.body.amount + (req.body.delivery ? deliveryPrice : 0);
         try {
             await axios.post(MAILGUN_SERVICE_URL + 'send', {
                 mailgunId: MAILGUN_ID,
@@ -58,7 +59,7 @@ app.post('/orderEmail', json(), async (req, res) => {
                         <li>Surname: ${req.body.orderData.surname}</li>
                         <li>Email: ${req.body.orderData.email}</li>
                         <li>Amount: ${req.body.orderData.amount}</li>
-                        <li>Delivery: ${req.body.orderData.delivery ? 'Yes' : 'No'}</li>
+                        <li>${req.body.orderData.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
                         ${
                             req.body.orderData.delivery
                                 ? '<li>Full Address: ' +
@@ -70,7 +71,7 @@ app.post('/orderEmail', json(), async (req, res) => {
                                   '</li>'
                                 : ''
                         }
-                        <li>Price: €${req.body.orderData.price.toFixed(2)}</li>
+                        <li>Price: €${price.toFixed(2)}</li>
                     </ul>
                     <p>Soo... yeah, get to it!</p>`
             });
@@ -84,12 +85,14 @@ app.post('/orderEmail', json(), async (req, res) => {
 
 app.post('/clientEmail', json(), async (req, res) => {
     if (req.body.orderData) {
+        const price = pricePerBox * req.body.amount + (req.body.delivery ? deliveryPrice : 0);
+
         try {
             await axios.post(MAILGUN_SERVICE_URL + 'send', {
                 mailgunId: MAILGUN_ID,
                 mailgunDomain: MAILGUN_DOMAIN,
                 from: fromEmail,
-                to: emailList,
+                to: req.body.orderData.email,
                 subject: 'Karti Kontra Kulħadd Order received!',
                 html: `<p>Hi ${req.body.orderData.name} ${req.body.orderData.surname}! </p>
                 <p>We'd like to confirm that we have received your order on KartiKontraKulħadd.com! Here are the details:</p>
@@ -98,7 +101,7 @@ app.post('/clientEmail', json(), async (req, res) => {
                     <li>Surname: ${req.body.orderData.surname}</li>
                     <li>Email: ${req.body.orderData.email}</li>
                     <li>Amount: ${req.body.orderData.amount}</li>
-                    <li>Delivery: ${req.body.orderData.delivery ? 'Yes' : 'No'}</li>
+                    <li>${req.body.orderData.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
                     ${
                         req.body.orderData.delivery
                             ? '<li>Full Address: ' +
@@ -110,7 +113,7 @@ app.post('/clientEmail', json(), async (req, res) => {
                               '</li>'
                             : ''
                     }
-                    <li>Price: €${req.body.orderData.price.toFixed(2)}</li>
+                    <li>Price: €${price.toFixed(2)}</li>
                 </ul>
                 <p>We will be in touch with you soon to coordinate your ${
                     req.body.orderData.delivery ? 'delivery' : 'pickup'
