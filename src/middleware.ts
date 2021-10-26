@@ -5,8 +5,8 @@ export const bouncer = (req: Request, res: Response, next: NextFunction) => {
     if (SERVICE_PROVIDER_DOMAINS) {
         const verifiedDomains = SERVICE_PROVIDER_DOMAINS.split(',');
         console.log(verifiedDomains);
-        console.log(req.hostname);
-        if (verifiedDomains.includes(req.hostname)) {
+        console.log(req.originalUrl);
+        if (verifiedDomains.includes(req.originalUrl)) {
             next();
         } else {
             res.status(401).end('Locked to specific Service Provider');
