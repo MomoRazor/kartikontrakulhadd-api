@@ -44,7 +44,9 @@ app.use(bouncer);
 
 app.post('/orderEmail', json(), async (req, res) => {
     if (req.body.orderData) {
-        const price = pricePerBox * req.body.amount + (req.body.delivery ? deliveryPrice : 0);
+        const price =
+            pricePerBox * req.body.orderData.amount +
+            (req.body.orderData.delivery ? deliveryPrice : 0);
         try {
             await axios.post(MAILGUN_SERVICE_URL + 'send', {
                 mailgunId: MAILGUN_ID,
@@ -79,6 +81,7 @@ app.post('/orderEmail', json(), async (req, res) => {
                     </ul>
                     <p>Soo... yeah, get to it!</p>`
             });
+            res.json();
         } catch (e) {
             res.status(500).send(e);
         }
@@ -89,7 +92,9 @@ app.post('/orderEmail', json(), async (req, res) => {
 
 app.post('/clientEmail', json(), async (req, res) => {
     if (req.body.orderData) {
-        const price = pricePerBox * req.body.amount + (req.body.delivery ? deliveryPrice : 0);
+        const price =
+            pricePerBox * req.body.orderData.amount +
+            (req.body.orderData.delivery ? deliveryPrice : 0);
 
         try {
             await axios.post(MAILGUN_SERVICE_URL + 'send', {
@@ -124,6 +129,7 @@ app.post('/clientEmail', json(), async (req, res) => {
                     <li>Price: €${price.toFixed(2)}</li>
                 </ul>`
             });
+            res.json();
         } catch (e) {
             res.status(500).send(e);
         }
