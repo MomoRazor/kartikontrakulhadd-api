@@ -4,16 +4,10 @@ import { bouncer } from './middleware';
 import cors from 'cors';
 import helmet from 'helmet';
 import axios from 'axios';
-import {
-    MAILGUN_DOMAIN,
-    MAILGUN_ID,
-    MAILGUN_SERVICE_URL
-    // PAYPAL_CLIENT_ID,
-    // PAYPAL_CLIENT_SECRET,
-    // PAYPAL_SERVICE_URL
-} from './enviornment';
+import { MAILGUN_DOMAIN, MAILGUN_ID, MAILGUN_SERVICE_URL, STOCK_SIZE } from './enviornment';
 import { deliveryPrice, emailList, fromEmail, generatePurchaseUnits, pricePerBox } from './config';
 import moment from 'moment';
+import { addOrder, getNumberOfBoxesSold } from './function';
 
 const app = express();
 
@@ -21,26 +15,23 @@ app.use(cors());
 app.use(helmet());
 app.use(bouncer);
 
-// app.post('/createPaypalOrder', json(), async (req, res) => {
-//     if (req.body.amount) {
-//         let purchaseUnits: any[] = generatePurchaseUnits(req.body.amount, req.body.delivery);
-
-//         try {
-//             const result = await axios.post<any>(PAYPAL_SERVICE_URL + 'createOrder', {
-//                 paypalId: PAYPAL_CLIENT_ID,
-//                 paypalSecret: PAYPAL_CLIENT_SECRET,
-//                 purchaseUnits: purchaseUnits
-//             });
-//             res.json({
-//                 order: result.data.order
-//             });
-//         } catch (e) {
-//             res.status(500).send(e);
-//         }
-//     } else {
-//         res.status(400).send('Amount Missing');
-//     }
-// });
+app.post('/saveOrder', json(), async (req, res) => {
+    if (req.body.orderData) {
+        const price =
+            pricePerBox * req.body.orderData.amount +
+            (req.body.orderData.delivery ? deliveryPrice : 0);
+        try {
+            await addOrder(req.body.orderData, price);
+            res.json();
+        } catch (e) {
+            console.error(e);
+            res.status(500).send(e);
+        }
+    } else {
+        console.error('Order Information Missing');
+        res.status(400).send('Order Information Missing');
+    }
+});
 
 app.post('/orderEmail', json(), async (req, res) => {
     if (req.body.orderData) {
@@ -83,9 +74,11 @@ app.post('/orderEmail', json(), async (req, res) => {
             });
             res.json();
         } catch (e) {
+            console.error(e);
             res.status(500).send(e);
         }
     } else {
+        console.error('Order Information Missing');
         res.status(400).send('Order Information Missing');
     }
 });
@@ -131,9 +124,11 @@ app.post('/clientEmail', json(), async (req, res) => {
             });
             res.json();
         } catch (e) {
+            console.error(e);
             res.status(500).send(e);
         }
     } else {
+        console.error('Order Information Missing');
         res.status(400).send('Order Information Missing');
     }
 });
@@ -146,6 +141,7 @@ app.post('/generatePurchaseUnits', json(), async (req, res) => {
             purchaseUnits: purchaseUnits
         });
     } else {
+        console.error('Amount Missing');
         res.status(400).send('Amount Missing');
     }
 });
@@ -160,6 +156,19 @@ app.get('/getPricePerBox', async (_, res) => {
     res.json({
         pricePerBox: pricePerBox
     });
+});
+
+app.get('/stockNumber', async (_, res) => {
+    try {
+        const orderNumber = await getNumberOfBoxesSold();
+        const left = parseInt(STOCK_SIZE || '0') - orderNumber;
+        res.json({
+            inStock: left
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).send(e);
+    }
 });
 
 app.get('/', (_, res) => {
