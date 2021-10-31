@@ -7,7 +7,7 @@ export const bouncer = (req: Request, res: Response, next: NextFunction) => {
         if (verifiedDomains.includes(req.header('Origin') || '')) {
             next();
         } else {
-            console.error('Locked to specific Service Provider');
+            console.error('Locked to specific Service Provider', req.header('Origin'));
             res.status(401).end('Locked to specific Service Provider');
         }
     } else {
