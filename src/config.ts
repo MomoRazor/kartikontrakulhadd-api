@@ -15,6 +15,7 @@ export const generatePurchaseUnits = (amount: number, delivery?: boolean) => {
             reference_id: 'KKKBOX-' + i,
             description: 'A Box of Karti Kontra Kulħadd',
             amount: {
+                currency_code: 'EUR',
                 value: pricePerBox.toFixed(2)
             }
         });
@@ -25,6 +26,7 @@ export const generatePurchaseUnits = (amount: number, delivery?: boolean) => {
             reference_id: 'delivery',
             description: 'Delivery Service',
             amount: {
+                currency_code: 'EUR',
                 value: deliveryPrice.toFixed(2)
             }
         });
