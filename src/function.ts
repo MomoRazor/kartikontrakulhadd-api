@@ -16,7 +16,7 @@ export const getNumberOfBoxesSold = async () => {
 
     let numberOfBoxes = 0;
 
-    orderList.forEach((order) => {
+    await orderList.forEach((order) => {
         if (order) {
             numberOfBoxes += order.amount;
         }
@@ -38,7 +38,8 @@ export const addOrder = async (orderData: OrderData, totalPrice: number) => {
         delivery: orderData.delivery,
         addressLine1: orderData.addressLine1,
         addressLine2: orderData.addressLine2,
-        localityCode: orderData.localityCode,
+        locality: orderData.locality,
+        postCode: orderData.postCode,
         deliveryNote: orderData.deliveryNote,
         price: totalPrice
     });

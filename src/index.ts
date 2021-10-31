@@ -61,7 +61,9 @@ app.post('/orderEmail', json(), async (req, res) => {
                                   ' ' +
                                   req.body.orderData.addressLine2 +
                                   ' ' +
-                                  req.body.orderData.localityCode +
+                                  req.body.orderData.postCode +
+                                  ' ' +
+                                  req.body.orderData.locality +
                                   '</li>' +
                                   '<li>Special Request: ' +
                                   req.body.orderData.deliveryNote +
@@ -85,7 +87,7 @@ app.post('/orderEmail', json(), async (req, res) => {
 
 app.post('/clientEmail', json(), async (req, res) => {
     if (req.body.orderData) {
-        if(process.env.NODE_ENV === 'production' || emailList.includes(req.body.orderData.email)){
+        if (process.env.NODE_ENV === 'production' || emailList.includes(req.body.orderData.email)) {
             const price =
                 pricePerBox * req.body.orderData.amount +
                 (req.body.orderData.delivery ? deliveryPrice : 0);
@@ -109,15 +111,17 @@ app.post('/clientEmail', json(), async (req, res) => {
                         ${
                             req.body.orderData.delivery
                                 ? '<li>Full Address: ' +
-                                req.body.orderData.addressLine1 +
-                                ' ' +
-                                req.body.orderData.addressLine2 +
-                                ' ' +
-                                req.body.orderData.localityCode +
-                                '</li>' +
-                                '<li>Special Request: ' +
-                                req.body.orderData.deliveryNote +
-                                '</li>'
+                                  req.body.orderData.addressLine1 +
+                                  ' ' +
+                                  req.body.orderData.addressLine2 +
+                                  ' ' +
+                                  req.body.orderData.postCode +
+                                  ' ' +
+                                  req.body.orderData.locality +
+                                  '</li>' +
+                                  '<li>Special Request: ' +
+                                  req.body.orderData.deliveryNote +
+                                  '</li>'
                                 : ''
                         }
                         <li>Price: €${price.toFixed(2)}</li>
@@ -128,8 +132,8 @@ app.post('/clientEmail', json(), async (req, res) => {
                 console.error(e);
                 res.status(500).send(e);
             }
-        }else{
-            console.log("No Client email sent, because of Sandbox and unauthorized Target")
+        } else {
+            console.log('No Client email sent, because of Sandbox and unauthorized Target');
             res.json();
         }
     } else {

@@ -7,6 +7,7 @@ export type OrderData = {
     delivery: boolean;
     addressLine1: string;
     addressLine2: string;
-    localityCode: string;
+    locality: string;
+    postCode: string;
     deliveryNote?: string;
 };
