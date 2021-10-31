@@ -85,47 +85,52 @@ app.post('/orderEmail', json(), async (req, res) => {
 
 app.post('/clientEmail', json(), async (req, res) => {
     if (req.body.orderData) {
-        const price =
-            pricePerBox * req.body.orderData.amount +
-            (req.body.orderData.delivery ? deliveryPrice : 0);
+        if(process.env.NODE_ENV === 'production' || emailList.includes(req.body.orderData.email)){
+            const price =
+                pricePerBox * req.body.orderData.amount +
+                (req.body.orderData.delivery ? deliveryPrice : 0);
 
-        try {
-            await axios.post(MAILGUN_SERVICE_URL + 'send', {
-                mailgunId: MAILGUN_ID,
-                mailgunDomain: MAILGUN_DOMAIN,
-                from: fromEmail,
-                to: req.body.orderData.email,
-                subject: 'Karti Kontra Kulħadd Order received!',
-                html: `<p>Hi ${req.body.orderData.name} ${req.body.orderData.surname}! </p>
-                <p>We'd like to confirm that we have received your order on KartiKontraKulħadd.com! Here are the details:</p>
-                <ul>
-                    <li>Name: ${req.body.orderData.name}</li>
-                    <li>Surname: ${req.body.orderData.surname}</li>
-                    <li>Email: ${req.body.orderData.email}</li>
-                    <li>Mobile Number: ${req.body.orderData.mobileNumber}</li>
-                    <li>Amount: ${req.body.orderData.amount}</li>
-                    <li>${req.body.orderData.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
-                    ${
-                        req.body.orderData.delivery
-                            ? '<li>Full Address: ' +
-                              req.body.orderData.addressLine1 +
-                              ' ' +
-                              req.body.orderData.addressLine2 +
-                              ' ' +
-                              req.body.orderData.localityCode +
-                              '</li>' +
-                              '<li>Special Request: ' +
-                              req.body.orderData.deliveryNote +
-                              '</li>'
-                            : ''
-                    }
-                    <li>Price: €${price.toFixed(2)}</li>
-                </ul>`
-            });
+            try {
+                await axios.post(MAILGUN_SERVICE_URL + 'send', {
+                    mailgunId: MAILGUN_ID,
+                    mailgunDomain: MAILGUN_DOMAIN,
+                    from: fromEmail,
+                    to: req.body.orderData.email,
+                    subject: 'Karti Kontra Kulħadd Order received!',
+                    html: `<p>Hi ${req.body.orderData.name} ${req.body.orderData.surname}! </p>
+                    <p>We'd like to confirm that we have received your order on KartiKontraKulħadd.com! Here are the details:</p>
+                    <ul>
+                        <li>Name: ${req.body.orderData.name}</li>
+                        <li>Surname: ${req.body.orderData.surname}</li>
+                        <li>Email: ${req.body.orderData.email}</li>
+                        <li>Mobile Number: ${req.body.orderData.mobileNumber}</li>
+                        <li>Amount: ${req.body.orderData.amount}</li>
+                        <li>${req.body.orderData.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
+                        ${
+                            req.body.orderData.delivery
+                                ? '<li>Full Address: ' +
+                                req.body.orderData.addressLine1 +
+                                ' ' +
+                                req.body.orderData.addressLine2 +
+                                ' ' +
+                                req.body.orderData.localityCode +
+                                '</li>' +
+                                '<li>Special Request: ' +
+                                req.body.orderData.deliveryNote +
+                                '</li>'
+                                : ''
+                        }
+                        <li>Price: €${price.toFixed(2)}</li>
+                    </ul>`
+                });
+                res.json();
+            } catch (e) {
+                console.error(e);
+                res.status(500).send(e);
+            }
+        }else{
+            console.log("No Client email sent, because of Sandbox and unauthorized Target")
             res.json();
-        } catch (e) {
-            console.error(e);
-            res.status(500).send(e);
         }
     } else {
         console.error('Order Information Missing');
