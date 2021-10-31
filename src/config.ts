@@ -1,4 +1,5 @@
-export const pricePerBox = 39.99;
+// export const pricePerBox = 39.99;
+export const pricePerBox = 5;
 export const deliveryPrice = 10;
 
 export const fromEmail = 'kartikontrakulhadd@gmail.com';
