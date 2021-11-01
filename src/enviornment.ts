@@ -3,10 +3,11 @@ import { config } from 'dotenv';
 config();
 
 export const {
-    SERVICE_PROVIDER_DOMAINS,
+    API_KEY,
     MAILGUN_SERVICE_URL,
     MAILGUN_ID,
     MAILGUN_DOMAIN,
+    MAILGUN_API_KEY,
     MONGO_CONNECT_URL,
     STOCK_SIZE,
     NODE_ENV

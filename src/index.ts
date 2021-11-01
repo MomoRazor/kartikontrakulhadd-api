@@ -4,7 +4,13 @@ import { bouncer } from './middleware';
 import cors from 'cors';
 import helmet from 'helmet';
 import axios from 'axios';
-import { MAILGUN_DOMAIN, MAILGUN_ID, MAILGUN_SERVICE_URL, STOCK_SIZE } from './enviornment';
+import {
+    MAILGUN_API_KEY,
+    MAILGUN_DOMAIN,
+    MAILGUN_ID,
+    MAILGUN_SERVICE_URL,
+    STOCK_SIZE
+} from './enviornment';
 import { deliveryPrice, emailList, fromEmail, generatePurchaseUnits, pricePerBox } from './config';
 import moment from 'moment';
 import { addOrder, getNumberOfBoxesSold } from './function';
@@ -39,13 +45,15 @@ app.post('/orderEmail', json(), async (req, res) => {
             pricePerBox * req.body.orderData.amount +
             (req.body.orderData.delivery ? deliveryPrice : 0);
         try {
-            await axios.post(MAILGUN_SERVICE_URL + 'send', {
-                mailgunId: MAILGUN_ID,
-                mailgunDomain: MAILGUN_DOMAIN,
-                from: fromEmail,
-                to: emailList,
-                subject: 'KKK Order ' + moment().format('YYYY-MM-DD HH:mm'),
-                html: `<p>Hi! </p>
+            await axios.post(
+                MAILGUN_SERVICE_URL + 'send',
+                {
+                    mailgunId: MAILGUN_ID,
+                    mailgunDomain: MAILGUN_DOMAIN,
+                    from: fromEmail,
+                    to: emailList,
+                    subject: 'KKK Order ' + moment().format('YYYY-MM-DD HH:mm'),
+                    html: `<p>Hi! </p>
                     <p>A new order has just been submitted on KartiKontraKulħadd.com! Here are the details:</p>
                     <ul>
                         <li>Name: ${req.body.orderData.name}</li>
@@ -73,7 +81,13 @@ app.post('/orderEmail', json(), async (req, res) => {
                         <li>Price: €${price.toFixed(2)}</li>
                     </ul>
                     <p>Soo... yeah, get to it!</p>`
-            });
+                },
+                {
+                    headers: {
+                        authorization: MAILGUN_API_KEY as string
+                    }
+                }
+            );
             res.json();
         } catch (e) {
             console.error(e);
@@ -93,13 +107,15 @@ app.post('/clientEmail', json(), async (req, res) => {
                 (req.body.orderData.delivery ? deliveryPrice : 0);
 
             try {
-                await axios.post(MAILGUN_SERVICE_URL + 'send', {
-                    mailgunId: MAILGUN_ID,
-                    mailgunDomain: MAILGUN_DOMAIN,
-                    from: fromEmail,
-                    to: req.body.orderData.email,
-                    subject: 'Karti Kontra Kulħadd Order received!',
-                    html: `<p>Hi ${req.body.orderData.name} ${req.body.orderData.surname}! </p>
+                await axios.post(
+                    MAILGUN_SERVICE_URL + 'send',
+                    {
+                        mailgunId: MAILGUN_ID,
+                        mailgunDomain: MAILGUN_DOMAIN,
+                        from: fromEmail,
+                        to: req.body.orderData.email,
+                        subject: 'Karti Kontra Kulħadd Order received!',
+                        html: `<p>Hi ${req.body.orderData.name} ${req.body.orderData.surname}! </p>
                     <p>We'd like to confirm that we have received your order on KartiKontraKulħadd.com! Here are the details:</p>
                     <ul>
                         <li>Name: ${req.body.orderData.name}</li>
@@ -126,7 +142,13 @@ app.post('/clientEmail', json(), async (req, res) => {
                         }
                         <li>Price: €${price.toFixed(2)}</li>
                     </ul>`
-                });
+                    },
+                    {
+                        headers: {
+                            authorization: MAILGUN_API_KEY as string
+                        }
+                    }
+                );
                 res.json();
             } catch (e) {
                 console.error(e);
