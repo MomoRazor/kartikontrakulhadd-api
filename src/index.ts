@@ -85,7 +85,7 @@ app.post('/orderEmail', json(), async (req, res) => {
                 },
                 {
                     headers: {
-                        authorization: MAILGUN_API_KEY as string
+                        authorization: MAILGUN_API_KEY || ''
                     }
                 }
             );
@@ -146,7 +146,7 @@ app.post('/clientEmail', json(), async (req, res) => {
                     },
                     {
                         headers: {
-                            authorization: MAILGUN_API_KEY as string
+                            authorization: MAILGUN_API_KEY || ''
                         }
                     }
                 );
