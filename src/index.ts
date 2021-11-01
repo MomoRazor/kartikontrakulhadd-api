@@ -29,7 +29,7 @@ app.post('/saveOrder', json(), async (req, res) => {
             (req.body.orderData.delivery ? deliveryPrice : 0);
         try {
             await addOrder(req.body.orderData, price);
-            res.json();
+            res.status(200).json();
         } catch (e) {
             console.error(e);
             res.status(500).send(e);
@@ -89,7 +89,7 @@ app.post('/orderEmail', json(), async (req, res) => {
                     }
                 }
             );
-            res.json();
+            res.status(200).json();
         } catch (e) {
             console.error(e);
             res.status(500).send(e);
@@ -150,7 +150,7 @@ app.post('/clientEmail', json(), async (req, res) => {
                         }
                     }
                 );
-                res.json();
+                res.status(200).send();
             } catch (e) {
                 console.error(e);
                 res.status(500).send(e);
@@ -169,7 +169,7 @@ app.post('/generatePurchaseUnits', json(), async (req, res) => {
     if (req.body.amount) {
         let purchaseUnits: any[] = generatePurchaseUnits(req.body.amount, req.body.delivery);
 
-        res.json({
+        res.status(200).json({
             purchaseUnits: purchaseUnits
         });
     } else {
@@ -179,13 +179,13 @@ app.post('/generatePurchaseUnits', json(), async (req, res) => {
 });
 
 app.get('/getDeliveryPrice', async (_, res) => {
-    res.json({
+    res.status(200).json({
         deliveryPrice: deliveryPrice
     });
 });
 
 app.get('/getPricePerBox', async (_, res) => {
-    res.json({
+    res.status(200).json({
         pricePerBox: pricePerBox
     });
 });
@@ -194,7 +194,7 @@ app.get('/stockNumber', async (_, res) => {
     try {
         const orderNumber = await getNumberOfBoxesSold();
         const left = parseInt(STOCK_SIZE || '0') - orderNumber;
-        res.json({
+        res.status(200).json({
             inStock: left
         });
     } catch (e) {

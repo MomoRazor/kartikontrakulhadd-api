@@ -3,7 +3,6 @@ import { API_KEY } from './enviornment';
 
 export const bouncer = (req: Request, res: Response, next: NextFunction) => {
     if (API_KEY) {
-        console.log(API_KEY, req.headers.authorization);
         if (API_KEY === req.headers.authorization) {
             next();
         } else {
