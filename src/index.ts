@@ -9,6 +9,7 @@ import {
     MAILGUN_DOMAIN,
     MAILGUN_ID,
     MAILGUN_SERVICE_URL,
+    NODE_ENV,
     STOCK_SIZE
 } from './enviornment';
 import { deliveryPrice, emailList, fromEmail, generatePurchaseUnits, pricePerBox } from './config';
@@ -101,7 +102,7 @@ app.post('/orderEmail', json(), async (req, res) => {
 
 app.post('/clientEmail', json(), async (req, res) => {
     if (req.body.orderData) {
-        if (process.env.NODE_ENV === 'production' || emailList.includes(req.body.orderData.email)) {
+        if (NODE_ENV === 'production' || emailList.includes(req.body.orderData.email)) {
             const price =
                 pricePerBox * req.body.orderData.amount +
                 (req.body.orderData.delivery ? deliveryPrice : 0);
