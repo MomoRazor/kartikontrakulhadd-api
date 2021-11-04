@@ -12,7 +12,14 @@ import {
     NODE_ENV,
     STOCK_SIZE
 } from './enviornment';
-import { deliveryPrice, emailList, fromEmail, generatePurchaseUnits, pricePerBox } from './config';
+import {
+    deliveryPrice,
+    emailList,
+    fromEmail,
+    fromName,
+    generatePurchaseUnits,
+    pricePerBox
+} from './config';
 import moment from 'moment';
 import { addOrder, getNumberOfBoxesSold } from './function';
 
@@ -51,7 +58,7 @@ app.post('/orderEmail', json(), async (req, res) => {
                 {
                     mailgunId: MAILGUN_ID,
                     mailgunDomain: MAILGUN_DOMAIN,
-                    from: fromEmail,
+                    from: `${fromName} <${fromEmail}>`,
                     to: emailList,
                     subject: 'KKK Order ' + moment().format('YYYY-MM-DD HH:mm'),
                     html: `<p>Hi! </p>
@@ -113,7 +120,7 @@ app.post('/clientEmail', json(), async (req, res) => {
                     {
                         mailgunId: MAILGUN_ID,
                         mailgunDomain: MAILGUN_DOMAIN,
-                        from: fromEmail,
+                        from: `${fromName} <${fromEmail}>`,
                         to: req.body.orderData.email,
                         subject: 'Karti Kontra Kulħadd Order received!',
                         html: `<p>Hi ${req.body.orderData.name} ${req.body.orderData.surname}! </p>
