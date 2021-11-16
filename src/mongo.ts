@@ -5,7 +5,7 @@ export const mongoClient = new MongoClient(MONGO_CONNECT_URL as string);
 
 export const connectToCluster = async (client: MongoClient) => {
     await client.connect();
-    console.log('Connected successfully to server');
+    console.info('Connected successfully to DB');
     return client;
 };
 

@@ -1,5 +1,6 @@
+import { MongoClient } from 'mongodb';
 import { NODE_ENV } from './enviornment';
-import { connectToCollection, mongoClient, connectToCluster } from './mongo';
+import { connectToCollection } from './mongo';
 import { OrderData } from './types';
 
 export const dbName = 'store';
@@ -7,9 +8,7 @@ export const dbName = 'store';
 export const orderCollection =
     NODE_ENV === 'production' ? 'kartikontrakulhaddorders' : 'kartikontrakulhaddorders-staging';
 
-export const getNumberOfBoxesSold = async () => {
-    const client = await connectToCluster(mongoClient);
-
+export const getNumberOfBoxesSold = async (client: MongoClient) => {
     const orders = await connectToCollection(client, dbName, orderCollection);
 
     const orderList = orders.find();
@@ -25,8 +24,7 @@ export const getNumberOfBoxesSold = async () => {
     return numberOfBoxes;
 };
 
-export const addOrder = async (orderData: OrderData, totalPrice: number) => {
-    const client = await connectToCluster(mongoClient);
+export const addOrder = async (client: MongoClient, orderData: OrderData, totalPrice: number) => {
     const orders = await connectToCollection(client, dbName, orderCollection);
 
     return await orders.insertOne({
