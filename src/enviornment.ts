@@ -10,5 +10,5 @@ export const {
     MAILGUN_API_KEY,
     MONGO_CONNECT_URL,
     STOCK_SIZE,
-    NODE_ENV
+    ENVIRONMENT
 } = process.env;

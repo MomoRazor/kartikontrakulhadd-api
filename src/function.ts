@@ -1,12 +1,12 @@
 import { MongoClient } from 'mongodb';
-import { NODE_ENV } from './enviornment';
+import { ENVIRONMENT } from './enviornment';
 import { connectToCollection } from './mongo';
 import { OrderData } from './types';
 
 export const dbName = 'store';
 
 export const orderCollection =
-    NODE_ENV === 'production' ? 'kartikontrakulhaddorders' : 'kartikontrakulhaddorders-staging';
+    ENVIRONMENT === 'production' ? 'kartikontrakulhaddorders' : 'kartikontrakulhaddorders-staging';
 
 export const getNumberOfBoxesSold = async (client: MongoClient) => {
     const orders = await connectToCollection(client, dbName, orderCollection);
