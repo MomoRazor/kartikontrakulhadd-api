@@ -9,7 +9,7 @@ import {
     MAILGUN_DOMAIN,
     MAILGUN_ID,
     MAILGUN_SERVICE_URL,
-    NODE_ENV,
+    ENVIRONMENT,
     STOCK_SIZE
 } from './enviornment';
 import {
@@ -113,7 +113,7 @@ const main = async () => {
 
     app.post('/clientEmail', json(), async (req, res) => {
         if (req.body.orderData) {
-            if (NODE_ENV === 'production' || emailList.includes(req.body.orderData.email)) {
+            if (ENVIRONMENT === 'production' || emailList.includes(req.body.orderData.email)) {
                 const price =
                     pricePerBox * req.body.orderData.amount +
                     (req.body.orderData.delivery ? deliveryPrice : 0);
