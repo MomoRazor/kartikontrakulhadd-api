@@ -5,13 +5,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import axios from 'axios';
 import {
-    MAILGUN_API_KEY,
-    MAILGUN_DOMAIN,
-    MAILGUN_ID,
-    MAILGUN_SERVICE_URL,
-    ENVIRONMENT,
+    MAIL_SERVICE_URL,
+    MONGO_URL,
     STOCK_SIZE
-} from './enviornment';
+} from './env';
 import {
     deliveryPrice,
     emailList,
@@ -23,14 +20,26 @@ import {
 import moment from 'moment';
 import { addOrder, getNumberOfBoxesSold } from './function';
 import { connectToCluster, mongoClient } from './mongo';
+import mongoose from 'mongoose';
+import { OrderRepo } from './data';
+import { OrderSvc } from './svc';
 
-const app = express();
-
-app.use(cors());
-app.use(helmet());
-app.use(bouncer);
 
 const main = async () => {
+    const databaseConnection = mongoose.createConnection(MONGO_URL)
+    
+    const orderRepo = await OrderRepo(databaseConnection);
+
+    const app = express();
+
+    app.use(cors());
+    app.use(helmet());
+
+    const orderSvc = await OrderSvc(orderRepo)
+
+    OrderApi(app)
+
+
     const client = await connectToCluster(mongoClient);
 
     app.post('/saveOrder', json(), async (req, res) => {
@@ -58,10 +67,8 @@ const main = async () => {
                 (req.body.orderData.delivery ? deliveryPrice : 0);
             try {
                 await axios.post(
-                    MAILGUN_SERVICE_URL + 'send',
+                    MAIL_SERVICE_URL + 'send',
                     {
-                        mailgunId: MAILGUN_ID,
-                        mailgunDomain: MAILGUN_DOMAIN,
                         from: `${fromName} <${fromEmail}>`,
                         to: emailList,
                         subject: 'KKK Order ' + moment().format('YYYY-MM-DD HH:mm'),
@@ -214,10 +221,6 @@ const main = async () => {
             console.error(e);
             res.status(500).send(e);
         }
-    });
-
-    app.get('/', (_, res) => {
-        res.send('Hello from the KartiKontraKulhadd API Service!');
     });
 
     const PORT = process.env.PORT || 8080;
