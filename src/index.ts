@@ -1,227 +1,43 @@
-import express from 'express';
-import { json } from 'body-parser';
-import { bouncer } from './middleware';
+import express, {Express, json} from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import axios from 'axios';
+import morgan from 'morgan'
 import {
-    MAIL_SERVICE_URL,
     MONGO_URL,
-    STOCK_SIZE
+    SENDGRID_API_KEY,
 } from './env';
 import {
-    deliveryPrice,
-    emailList,
     fromEmail,
-    fromName,
-    generatePurchaseUnits,
-    pricePerBox
 } from './config';
-import moment from 'moment';
-import { addOrder, getNumberOfBoxesSold } from './function';
-import { connectToCluster, mongoClient } from './mongo';
 import mongoose from 'mongoose';
-import { OrderRepo } from './data';
-import { OrderSvc } from './svc';
+import { MailRepo, OrderRepo } from './repositories';
+import { AccessSvc, CommunicationSvc, OrderSvc } from './svc';
+import { AccessRouter, OrderRouter } from './routers';
+import sgMail from '@sendgrid/mail'
 
 
 const main = async () => {
     const databaseConnection = mongoose.createConnection(MONGO_URL)
     
-    const orderRepo = await OrderRepo(databaseConnection);
+    sgMail.setApiKey(SENDGRID_API_KEY)
 
-    const app = express();
+    const orderRepo = await OrderRepo(databaseConnection);
+    const emailRepo = await MailRepo(databaseConnection);
+
+    const app: Express = express()
 
     app.use(cors());
-    app.use(helmet());
+    app.use(morgan('dev'))
+    app.use(json({ limit: '4mb' }))
 
-    const orderSvc = await OrderSvc(orderRepo)
+    const accessSvc = await AccessSvc()
+    const communicationSvc = await CommunicationSvc(sgMail,emailRepo, fromEmail)
+    const orderSvc = await OrderSvc(orderRepo, communicationSvc)
 
-    OrderApi(app)
+    const accessRouter = AccessRouter(accessSvc)
+    const orderRouter = OrderRouter(orderSvc)
 
-
-    const client = await connectToCluster(mongoClient);
-
-    app.post('/saveOrder', json(), async (req, res) => {
-        if (req.body.orderData) {
-            const price =
-                pricePerBox * req.body.orderData.amount +
-                (req.body.orderData.delivery ? deliveryPrice : 0);
-            try {
-                await addOrder(client, req.body.orderData, price);
-                res.status(200).json();
-            } catch (e) {
-                console.error(e);
-                res.status(500).send(e);
-            }
-        } else {
-            console.error('Order Information Missing');
-            res.status(400).send('Order Information Missing');
-        }
-    });
-
-    app.post('/orderEmail', json(), async (req, res) => {
-        if (req.body.orderData) {
-            const price =
-                pricePerBox * req.body.orderData.amount +
-                (req.body.orderData.delivery ? deliveryPrice : 0);
-            try {
-                await axios.post(
-                    MAIL_SERVICE_URL + 'send',
-                    {
-                        from: `${fromName} <${fromEmail}>`,
-                        to: emailList,
-                        subject: 'KKK Order ' + moment().format('YYYY-MM-DD HH:mm'),
-                        html: `<p>Hi! </p>
-                    <p>A new order has just been submitted on KartiKontraKulħadd.com! Here are the details:</p>
-                    <ul>
-                        <li>Name: ${req.body.orderData.name}</li>
-                        <li>Surname: ${req.body.orderData.surname}</li>
-                        <li>Email: ${req.body.orderData.email}</li>
-                        <li>Mobile Number: ${req.body.orderData.mobileNumber}</li>
-                        <li>Amount: ${req.body.orderData.amount}</li>
-                        <li>${req.body.orderData.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
-                        ${
-                            req.body.orderData.delivery
-                                ? '<li>Full Address: ' +
-                                  req.body.orderData.addressLine1 +
-                                  ' ' +
-                                  req.body.orderData.addressLine2 +
-                                  ' ' +
-                                  req.body.orderData.postCode +
-                                  ' ' +
-                                  req.body.orderData.locality +
-                                  '</li>' +
-                                  '<li>Special Request: ' +
-                                  req.body.orderData.deliveryNote +
-                                  '</li>'
-                                : ''
-                        }
-                        <li>Price: €${price.toFixed(2)}</li>
-                    </ul>
-                    <p>Soo... yeah, get to it!</p>`
-                    },
-                    {
-                        headers: {
-                            authorization: MAILGUN_API_KEY || ''
-                        }
-                    }
-                );
-                res.status(200).json();
-            } catch (e) {
-                console.error(e);
-                res.status(500).send(e);
-            }
-        } else {
-            console.error('Order Information Missing');
-            res.status(400).send('Order Information Missing');
-        }
-    });
-
-    app.post('/clientEmail', json(), async (req, res) => {
-        if (req.body.orderData) {
-            if (ENVIRONMENT === 'production' || emailList.includes(req.body.orderData.email)) {
-                const price =
-                    pricePerBox * req.body.orderData.amount +
-                    (req.body.orderData.delivery ? deliveryPrice : 0);
-
-                try {
-                    await axios.post(
-                        MAILGUN_SERVICE_URL + 'send',
-                        {
-                            mailgunId: MAILGUN_ID,
-                            mailgunDomain: MAILGUN_DOMAIN,
-                            from: `${fromName} <${fromEmail}>`,
-                            to: req.body.orderData.email,
-                            subject: 'Karti Kontra Kulħadd Order received!',
-                            html: `<p>Hi ${req.body.orderData.name} ${
-                                req.body.orderData.surname
-                            }! </p>
-                    <p>We'd like to confirm that we have received your order on KartiKontraKulħadd.com! Here are the details:</p>
-                    <ul>
-                        <li>Name: ${req.body.orderData.name}</li>
-                        <li>Surname: ${req.body.orderData.surname}</li>
-                        <li>Email: ${req.body.orderData.email}</li>
-                        <li>Mobile Number: ${req.body.orderData.mobileNumber}</li>
-                        <li>Amount: ${req.body.orderData.amount}</li>
-                        <li>${req.body.orderData.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
-                        ${
-                            req.body.orderData.delivery
-                                ? '<li>Full Address: ' +
-                                  req.body.orderData.addressLine1 +
-                                  ' ' +
-                                  req.body.orderData.addressLine2 +
-                                  ' ' +
-                                  req.body.orderData.postCode +
-                                  ' ' +
-                                  req.body.orderData.locality +
-                                  '</li>' +
-                                  '<li>Special Request: ' +
-                                  req.body.orderData.deliveryNote +
-                                  '</li>'
-                                : ''
-                        }
-                        <li>Price: €${price.toFixed(2)}</li>
-                    </ul>`
-                        },
-                        {
-                            headers: {
-                                authorization: MAILGUN_API_KEY || ''
-                            }
-                        }
-                    );
-                    res.status(200).send();
-                } catch (e) {
-                    console.error(e);
-                    res.status(500).send(e);
-                }
-            } else {
-                console.info('No Client email sent, because of Sandbox and unauthorized Target');
-                res.status(200).send();
-            }
-        } else {
-            console.error('Order Information Missing');
-            res.status(400).send('Order Information Missing');
-        }
-    });
-
-    app.post('/generatePurchaseUnits', json(), async (req, res) => {
-        if (req.body.amount) {
-            let purchaseUnits: any[] = generatePurchaseUnits(req.body.amount, req.body.delivery);
-
-            res.status(200).json({
-                purchaseUnits: purchaseUnits
-            });
-        } else {
-            console.error('Amount Missing');
-            res.status(400).send('Amount Missing');
-        }
-    });
-
-    app.get('/getDeliveryPrice', async (_, res) => {
-        res.status(200).json({
-            deliveryPrice: deliveryPrice
-        });
-    });
-
-    app.get('/getPricePerBox', async (_, res) => {
-        res.status(200).json({
-            pricePerBox: pricePerBox
-        });
-    });
-
-    app.get('/stockNumber', async (_, res) => {
-        try {
-            const orderNumber = await getNumberOfBoxesSold(client);
-            const left = parseInt(STOCK_SIZE || '0') - orderNumber;
-            res.status(200).json({
-                inStock: left
-            });
-        } catch (e) {
-            console.error(e);
-            res.status(500).send(e);
-        }
-    });
+    app.use('/', accessRouter)
+    app.use('/', orderRouter)
 
     const PORT = process.env.PORT || 8080;
 
