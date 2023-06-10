@@ -5,14 +5,14 @@ export interface Order {
     surname: string;
     email: string;
     mobileNumber: string;
-    amount: number
-    delivery: boolean
-    addressLine1: string
-    addressLine2: string
-    locality: string
-    postCode: string
-    deliveryNote: string
-    price: number
+    amount: number;
+    delivery: boolean;
+    addressLine1: string;
+    addressLine2: string;
+    locality: string;
+    postCode: string;
+    deliveryNote: string;
+    price: number;
 }
 
 export type IOrderRepo = Model<Order>;
@@ -29,7 +29,7 @@ const OrderSchema = new Schema<Order>({
     locality: { type: Schema.Types.String, required: false },
     postCode: { type: Schema.Types.String, required: false },
     deliveryNote: { type: Schema.Types.String, required: false },
-    price: { type: Schema.Types.Number, required: true },
+    price: { type: Schema.Types.Number, required: true }
 });
 
 export const OrderRepo = async (connection: Connection): Promise<IOrderRepo> => {

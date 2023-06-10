@@ -1,8 +1,8 @@
-import { MailService } from "@sendgrid/mail"
-import { IMailRepo, Mail } from "../repositories"
+import { MailService } from '@sendgrid/mail';
+import { IMailRepo, Mail } from '../repositories';
 
 export interface ICommunicationSvc {
-    sendEmail: (email: Mail) => Promise<Mail>
+    sendEmail: (email: Mail) => Promise<Mail>;
 }
 
 // Service
@@ -12,15 +12,15 @@ export const CommunicationSvc = (
     fromEmail: string
 ): ICommunicationSvc => {
     const sendEmail = async (email: Mail) => {
-        const { to, subject, html, from } = email
+        const { to, subject, html, from } = email;
 
         const msg: any = {
             to: to,
             from: from || fromEmail,
             subject: subject,
             html: html
-        }
-        await sendGrid.sendMultiple(msg)
+        };
+        await sendGrid.sendMultiple(msg);
 
         return await emailRepo.create({
             data: {
@@ -29,10 +29,10 @@ export const CommunicationSvc = (
                 subject: subject,
                 html: html
             }
-        })
-    }
+        });
+    };
 
     return {
         sendEmail
-    }
-}
+    };
+};

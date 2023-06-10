@@ -1,17 +1,16 @@
-import { API_KEY } from "../env"
+import { API_KEY } from '../env';
 
 export interface IAccessSvc {
-    checkAPIKey: (key: string) => boolean
+    checkAPIKey: (key: string) => boolean;
 }
 
 // Service
-export const AccessSvc = (
-): IAccessSvc => {
+export const AccessSvc = (): IAccessSvc => {
     const checkAPIKey = (key: string) => {
-        return key === API_KEY
-    }
+        return key === API_KEY;
+    };
 
     return {
         checkAPIKey
-    }
-}
+    };
+};

@@ -1,2 +1,2 @@
-export * from './OrderRepo'
-export * from './MailRepo'
+export * from './OrderRepo';
+export * from './MailRepo';

@@ -1,116 +1,61 @@
-import { deliveryPrice, fromEmail, fromName, pricePerBox } from "../config";
-import { ADMIN_EMAILS } from "../env";
-import { IOrderRepo, Order } from "../repositories"
-import { ICommunicationSvc } from "./communication";
-import {DateTime} from 'luxon'
-
+import { deliveryPrice, fromEmail, fromName, pricePerBox } from '../config';
+import { ADMIN_EMAILS } from '../env';
+import { IOrderRepo, Order } from '../repositories';
+import { generateClientEmail } from '../templates';
+import { generateAdminEmail } from '../templates/admin-email';
+import { ICommunicationSvc } from './communication';
+import { DateTime } from 'luxon';
 
 export interface IOrderSvc {
-	getNumberOfBoxesSold: () => Promise<number>
-	addOrder: (order: Order) => Promise<Order>
-    generatePurchaseUnits: (amount: number, delivery?: boolean) => any[]
+    getNumberOfBoxesSold: () => Promise<number>;
+    addOrder: (order: Order) => Promise<Order>;
+    generatePurchaseUnits: (amount: number, delivery?: boolean) => any[];
 }
 
 export const OrderSvc = (orderRepo: IOrderRepo, communicationSvc: ICommunicationSvc): IOrderSvc => {
     const getNumberOfBoxesSold = async () => {
-        const orderList = await orderRepo.find({})
-    
+        const orderList = await orderRepo.find({});
+
         let numberOfBoxes = 0;
-    
+
         await orderList.forEach((order) => {
             if (order) {
                 numberOfBoxes += order.amount;
             }
         });
-    
+
         return numberOfBoxes;
     };
 
     const addOrder = async (orderData: Order) => {
-
         const order = await orderRepo.create(orderData);
 
-        try{
+        try {
             await communicationSvc.sendEmail({
                 from: `${fromName} <${fromEmail}>`,
-                html: `<p>Hi! </p>
-                <p>A new order has just been submitted on KartiKontraKulħadd.com! Here are the details:</p>
-                <ul>
-                    <li>Name: ${order.name}</li>
-                    <li>Surname: ${order.surname}</li>
-                    <li>Email: ${order.email}</li>
-                    <li>Mobile Number: ${order.mobileNumber}</li>
-                    <li>Amount: ${order.amount}</li>
-                    <li>${order.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
-                    ${
-                        order.delivery
-                            ? '<li>Full Address: ' +
-                              order.addressLine1 +
-                              ' ' +
-                              order.addressLine2 +
-                              ' ' +
-                              order.postCode +
-                              ' ' +
-                              order.locality +
-                              '</li>' +
-                              '<li>Special Request: ' +
-                              order.deliveryNote +
-                              '</li>'
-                            : ''
-                    }
-                    <li>Price: €${order.price.toFixed(2)}</li>
-                </ul>
-                <p>Soo... yeah, get to it!</p>`,
+                html: generateAdminEmail(order),
                 status: 'Pending',
                 subject: `KKK Order ${DateTime.now().toFormat('YYYY-MM-DD HH:mm')}`,
                 to: ADMIN_EMAILS
-            })
-        }catch(e){
-            console.info('Admin Email could not be sent')
+            });
+        } catch (e) {
+            console.info('Admin Email could not be sent');
         }
 
-        try{
+        try {
             await communicationSvc.sendEmail({
                 from: `${fromName} <${fromEmail}>`,
-                html: `<p>Hi ${order.name} ${
-                    order.surname
-                }! </p>
-        <p>We'd like to confirm that we have received your order on KartiKontraKulħadd.com! Here are the details:</p>
-        <ul>
-            <li>Name: ${order.name}</li>
-            <li>Surname: ${order.surname}</li>
-            <li>Email: ${order.email}</li>
-            <li>Mobile Number: ${order.mobileNumber}</li>
-            <li>Amount: ${order.amount}</li>
-            <li>${order.delivery ? 'To Be Delivered' : 'For Pickup'}</li>
-            ${
-                order.delivery
-                    ? '<li>Full Address: ' +
-                      order.addressLine1 +
-                      ' ' +
-                      order.addressLine2 +
-                      ' ' +
-                      order.postCode +
-                      ' ' +
-                      order.locality +
-                      '</li>' +
-                      '<li>Special Request: ' +
-                      order.deliveryNote +
-                      '</li>'
-                    : ''
-            }
-            <li>Price: €${order.price.toFixed(2)}</li>
-        </ul>`,
+                html: generateClientEmail(order),
                 status: 'Pending',
                 subject: `KKK Order ${DateTime.now().toFormat('YYYY-MM-DD HH:mm')}`,
                 to: ADMIN_EMAILS
-            })
-        }catch(e){
-            console.info('Client Email could not be sent')
+            });
+        } catch (e) {
+            console.info('Client Email could not be sent');
         }
 
-        return order
-    }
+        return order;
+    };
 
     const generatePurchaseUnits = (amount: number, delivery?: boolean) => {
         let purchaseUnits: any[] = [];
@@ -124,7 +69,7 @@ export const OrderSvc = (orderRepo: IOrderRepo, communicationSvc: ICommunication
                 }
             });
         }
-    
+
         if (delivery) {
             purchaseUnits.push({
                 reference_id: 'delivery',
@@ -135,13 +80,13 @@ export const OrderSvc = (orderRepo: IOrderRepo, communicationSvc: ICommunication
                 }
             });
         }
-    
+
         return purchaseUnits;
     };
 
-	return {
+    return {
         getNumberOfBoxesSold,
         addOrder,
         generatePurchaseUnits
-	}
-}
+    };
+};

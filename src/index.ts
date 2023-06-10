@@ -1,43 +1,37 @@
-import express, {Express, json} from 'express';
+import express, { Express, json } from 'express';
 import cors from 'cors';
-import morgan from 'morgan'
-import {
-    MONGO_URL,
-    SENDGRID_API_KEY,
-} from './env';
-import {
-    fromEmail,
-} from './config';
+import morgan from 'morgan';
+import { MONGO_URL, SENDGRID_API_KEY } from './env';
+import { fromEmail } from './config';
 import mongoose from 'mongoose';
 import { MailRepo, OrderRepo } from './repositories';
 import { AccessSvc, CommunicationSvc, OrderSvc } from './svc';
 import { AccessRouter, OrderRouter } from './routers';
-import sgMail from '@sendgrid/mail'
-
+import sgMail from '@sendgrid/mail';
 
 const main = async () => {
-    const databaseConnection = mongoose.createConnection(MONGO_URL)
-    
-    sgMail.setApiKey(SENDGRID_API_KEY)
+    const databaseConnection = mongoose.createConnection(MONGO_URL);
+
+    sgMail.setApiKey(SENDGRID_API_KEY);
 
     const orderRepo = await OrderRepo(databaseConnection);
     const emailRepo = await MailRepo(databaseConnection);
 
-    const app: Express = express()
+    const app: Express = express();
 
     app.use(cors());
-    app.use(morgan('dev'))
-    app.use(json({ limit: '4mb' }))
+    app.use(morgan('dev'));
+    app.use(json({ limit: '4mb' }));
 
-    const accessSvc = await AccessSvc()
-    const communicationSvc = await CommunicationSvc(sgMail,emailRepo, fromEmail)
-    const orderSvc = await OrderSvc(orderRepo, communicationSvc)
+    const accessSvc = await AccessSvc();
+    const communicationSvc = await CommunicationSvc(sgMail, emailRepo, fromEmail);
+    const orderSvc = await OrderSvc(orderRepo, communicationSvc);
 
-    const accessRouter = AccessRouter(accessSvc)
-    const orderRouter = OrderRouter(orderSvc)
+    const accessRouter = AccessRouter(accessSvc);
+    const orderRouter = OrderRouter(orderSvc);
 
-    app.use('/', accessRouter)
-    app.use('/', orderRouter)
+    app.use('/', accessRouter);
+    app.use('/', orderRouter);
 
     const PORT = process.env.PORT || 8080;
 
