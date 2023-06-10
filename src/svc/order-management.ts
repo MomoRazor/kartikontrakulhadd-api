@@ -35,7 +35,7 @@ export const OrderSvc = (orderRepo: IOrderRepo, communicationSvc: ICommunication
                 from: `${fromName} <${fromEmail}>`,
                 html: generateAdminEmail(order),
                 status: 'Pending',
-                subject: `KKK Order ${DateTime.now().toFormat('YYYY-MM-DD HH:mm')}`,
+                subject: `KKK Order ${DateTime.now().toFormat('yyyy/MM/dd hh:mm')}`,
                 to: ADMIN_EMAILS
             });
         } catch (e) {
@@ -47,8 +47,8 @@ export const OrderSvc = (orderRepo: IOrderRepo, communicationSvc: ICommunication
                 from: `${fromName} <${fromEmail}>`,
                 html: generateClientEmail(order),
                 status: 'Pending',
-                subject: `KKK Order ${DateTime.now().toFormat('YYYY-MM-DD HH:mm')}`,
-                to: ADMIN_EMAILS
+                subject: `KKK Order ${DateTime.now().toFormat('yyyy/MM/dd hh:mm')}`,
+                to: [order.email]
             });
         } catch (e) {
             console.info('Client Email could not be sent');

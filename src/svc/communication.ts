@@ -20,16 +20,42 @@ export const CommunicationSvc = (
             subject: subject,
             html: html
         };
-        await sendGrid.sendMultiple(msg);
-
-        return await emailRepo.create({
-            data: {
-                to: to,
-                from: from || fromEmail,
-                subject: subject,
-                html: html
-            }
+        let mail = await emailRepo.create({
+            to: to,
+            from: from || fromEmail,
+            subject: subject,
+            html: html
         });
+
+        try {
+            await sendGrid.sendMultiple(msg);
+
+            await emailRepo.findByIdAndUpdate(
+                mail._id,
+                {
+                    $set: {
+                        status: 'Success'
+                    }
+                },
+                {
+                    new: true
+                }
+            );
+        } catch (e) {
+            await emailRepo.findByIdAndUpdate(
+                mail._id,
+                {
+                    $set: {
+                        status: 'Failed'
+                    }
+                },
+                {
+                    new: true
+                }
+            );
+        }
+
+        return mail;
     };
 
     return {
