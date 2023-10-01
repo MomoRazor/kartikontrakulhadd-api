@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { IAccessSvc } from '../svc';
-import { customError } from '@sector-eleven-ltd/cosmos-lite';
 
 export const AccessRouter = (accessSvc: IAccessSvc) => {
     const router = Router();
@@ -10,11 +9,11 @@ export const AccessRouter = (accessSvc: IAccessSvc) => {
             const { authorization } = req.headers;
 
             if (!authorization) {
-                throw customError('Authorization not found', 403);
+                throw new Error('Authorization no found');
             }
 
             if (!(await accessSvc.checkAPIKey(authorization))) {
-                throw customError('Api Key does not match', 403);
+                throw new Error('Api Key does not match');
             }
 
             return next();
