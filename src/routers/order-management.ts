@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { IOrderSvc } from '../svc';
-import { sendExpressError } from '@sector-eleven-ltd/cosmos-lite';
 import { deliveryPrice, pricePerBox } from '../config';
 import { STOCK_SIZE } from '../env';
 
@@ -16,7 +15,8 @@ export const OrderRouter = (orderSvc: IOrderSvc) => {
                 errors: []
             });
         } catch (e: any) {
-            sendExpressError(res, e);
+            console.error(e);
+            res.status(500).send(e);
         }
     });
 

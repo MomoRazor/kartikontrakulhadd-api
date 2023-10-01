@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { IAccessSvc } from '../svc';
-import { customError, sendExpressError } from '@sector-eleven-ltd/cosmos-lite';
+import { customError } from '@sector-eleven-ltd/cosmos-lite';
 
 export const AccessRouter = (accessSvc: IAccessSvc) => {
     const router = Router();
@@ -19,7 +19,8 @@ export const AccessRouter = (accessSvc: IAccessSvc) => {
 
             return next();
         } catch (e: any) {
-            sendExpressError(res, e);
+            console.error(e);
+            res.status(500).send(e);
         }
     });
 
