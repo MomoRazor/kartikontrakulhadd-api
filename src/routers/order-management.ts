@@ -69,6 +69,7 @@ export const OrderRouter = (orderSvc: IOrderSvc) => {
         try {
             const orderNumber = await orderSvc.getNumberOfBoxesSold();
             const left = parseInt(STOCK_SIZE || '0') - orderNumber;
+            console.log(left);
             res.status(200).json({
                 inStock: left
             });

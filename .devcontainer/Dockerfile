@@ -1,4 +1,4 @@
-FROM node:18-bullseye-slim
+FROM node:22-bullseye-slim
 
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID

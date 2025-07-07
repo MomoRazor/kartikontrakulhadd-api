@@ -1,4 +1,4 @@
-import { MailService } from '@sendgrid/mail';
+import { TransactionalEmailsApi } from '@getbrevo/brevo';
 import { IMailRepo, Mail } from '../repositories';
 
 export interface ICommunicationSvc {
@@ -7,19 +7,13 @@ export interface ICommunicationSvc {
 
 // Service
 export const CommunicationSvc = (
-    sendGrid: MailService,
+    brevo: TransactionalEmailsApi,
     emailRepo: IMailRepo,
     fromEmail: string
 ): ICommunicationSvc => {
     const sendEmail = async (email: Mail) => {
         const { to, subject, html, from } = email;
 
-        const msg: any = {
-            to: to,
-            from: from || fromEmail,
-            subject: subject,
-            html: html
-        };
         let mail = await emailRepo.create({
             to: to,
             from: from || fromEmail,
@@ -28,7 +22,12 @@ export const CommunicationSvc = (
         });
 
         try {
-            await sendGrid.sendMultiple(msg);
+            await brevo.sendTransacEmail({
+                sender: { email: from || fromEmail },
+                to: to.map((email) => ({ email })),
+                subject: subject,
+                htmlContent: html
+            });
 
             await emailRepo.findByIdAndUpdate(
                 mail._id,
