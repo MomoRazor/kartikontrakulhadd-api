@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import { MONGO_URL, SENDGRID_API_KEY } from '../env';
-import sgMail from '@sendgrid/mail';
+import { BREVO_API_KEY, MONGO_URL } from '../env';
 import { MailRepo } from '../repositories';
 import { CommunicationSvc, ICommunicationSvc } from './communication';
 import { fromEmail, fromName } from '../config';
 import { generateClientEmail } from '../templates';
 import { DateTime } from 'luxon';
+import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys } from '@getbrevo/brevo';
 
 let communicationSvc: ICommunicationSvc;
 
@@ -13,11 +13,12 @@ beforeAll(async () => {
     // Set up database connection
     const databaseConnection = await mongoose.createConnection(MONGO_URL);
 
-    sgMail.setApiKey(SENDGRID_API_KEY);
+    const apiInstance = new TransactionalEmailsApi();
+    apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, BREVO_API_KEY);
 
     const emailRepo = await MailRepo(databaseConnection);
 
-    communicationSvc = await CommunicationSvc(sgMail, emailRepo, fromEmail);
+    communicationSvc = CommunicationSvc(apiInstance, emailRepo, fromEmail);
 });
 
 test('Test Client Email Sending', async () => {
